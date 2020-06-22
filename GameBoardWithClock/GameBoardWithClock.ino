@@ -1,7 +1,7 @@
 /*
    Multiple games for on Arexx Game Board
    Author: Sjors Smit
-   Date: June 2nd 2020
+   Rev 22/06/2020
    AREXX ENGINEERING
 */
 
