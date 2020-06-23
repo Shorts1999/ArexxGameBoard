@@ -1,7 +1,7 @@
 /*
    Multiple games for on Arexx Game Board
    Author: Sjors Smit
-   Rev 22/06/2020
+   Date: June 2nd 2020
    AREXX ENGINEERING
 */
 
@@ -15,6 +15,11 @@
 
 //Amount of selectable items in the main menu (zero indexed)
 #define gameAmount 2
+
+//the score in PONG where the game is won:
+#define PONGSCORE 20
+//the width of the bar in PONG
+#define BARWIDTH 3
 
 //pins for PS2 controller
 #define PS2_CMD   7
@@ -98,7 +103,7 @@ const uint8_t clockBckgrnd[18] PROGMEM = {
   0x1f, 0x00
 };
 //7-segment numbers for "digital" clock display:
-const uint32_t digitalNumbers[5] PROGMEM = {
+const uint32_t digitalNumbers[5] PROGMEM = { //To save space, all numbers are stored together in a single 5x32-bits array. these are later decoded into the individual numbers
   0b11100111111110111110011111111100,
   0b10100100100110110010000110110100,
   0b10100111111111111111100111111100,
@@ -108,7 +113,7 @@ const uint32_t digitalNumbers[5] PROGMEM = {
 
 //Tetris shapes:
 //Every shape has 4 possible rotations, every "Bitmap" of a 4x4 shape is stored in a single 16-bit number
-const uint16_t Shapes[28] = {
+const uint16_t Shapes[28] = { //Consideration: store these in PROGMEM as well?
   0b0000000000110110, //S-Shape
   0b0000010001100010,
   0b0000000000110110,
@@ -156,7 +161,7 @@ void(* resetFunc) (void) = 0;//declare reset function at address 0
 
 void setup() {
   Serial.begin(9600); //Initialize the Serial port
-  delay(200); //give modules some time to boot up before initialization\
+  delay(200); //give modules some time to boot up before initialization
 
   for (int i = 0; i < TILEHEIGHT + 4; i++) { //Setup the Board array with the empty field, bars on the side to indicate the walls for collision detection
     Board[i] =  0x8000 | (0x8000 >> (TILEWIDTH + 1));
@@ -167,13 +172,13 @@ void setup() {
   matrix.begin(); //Initializing the NeoPixel display
   matrix.clear();
   matrix.show();
-  matrix.setBrightness(160); //set Brightness of the main display
+  matrix.setBrightness(180); //set Brightness of the main display
 
   //Set up controller
   while (!ps2x.config_gamepad(PS2_CLK, PS2_CMD, PS2_SEL, PS2_DAT, false, false)) {
   }
 
-  scorePanel.setIntensity(6);   //set Brightness of the score display:
+  scorePanel.setIntensity(2);   //set Brightness of the score display
   for (int i = 0; i < 8; i++) { //Rotate all
     scorePanel.setRotation(i, 1);
   }
@@ -190,7 +195,7 @@ void setup() {
   matrix.clear(); //empty the display
   randomSeed(analogRead(A0)); //Set a place for the random number generator using a floating pin
   delay(10);
-  shape = random(0, 7); //get a "fake" random number to avoid starting at 0 every time
+  shape = random(0, 7); //get a "fake" random number to avoid starting at 0 every time, since random seemed to always boot at 0, even after setting a seed
 
 }
 
@@ -261,10 +266,10 @@ void loop() { //main menu / game select screen.
 void displayClock() {
   bool mode = 0; //Mode for either setting or displaying the clock
   matrix.clear();
-  float minutes=0;
-  float Hours=0;
-  float setMinutes=0;
-  float setHours=0;
+  float minutes = 0;
+  float Hours = 0;
+  float setMinutes = 0;
+  float setHours = 0;
   int8_t minuteX;
   int8_t minuteY;
   int8_t hourX;
@@ -277,23 +282,23 @@ void displayClock() {
       resetFunc(); //reset on Select Press
     }
     switch (mode) {
-      case 0:
+      case 0: //Display Time Mode
         if (ps2x.ButtonPressed(PSB_CROSS)) {
           mode = 1;
         }
         matrix.drawBitmap(0, 0, clockBckgrnd,  10, 9, RED);
         RTC.readTime(); //Update the local registers from the module
         minutes = RTC.getMinutes(); //Read the minutes from the local register
-        minuteX = round((4 * sin((minutes / 30) * 3.14)));
-        minuteY = round((4 * cos((minutes / 30) * 3.14)));
+        minuteX = round((4 * sin((minutes / 30) * M_PI)));
+        minuteY = round((4 * cos((minutes / 30) * M_PI)));
         Hours = RTC.getHours(); //Read the Hours from the local register
         drawDigit(((int)Hours / 10), 0, 10, GREEN);
         drawDigit(((int)Hours % 10), 4, 10, GREEN);
         drawDigit(((int)minutes / 10), 3, 15, BLUE);
         drawDigit(((int)minutes % 10), 7, 15, BLUE);
         if (Hours > 12) Hours -= 12; //set to 12 hour value for analog clock
-        hourX = round((2 * sin((Hours / 6) * 3.14)));
-        hourY = round((2 * cos((Hours / 6) * 3.14)));
+        hourX = round((2 * sin((Hours / 6) * M_PI)));
+        hourY = round((2 * cos((Hours / 6) * M_PI)));
         matrix.drawLine(5, 4, 5 + minuteX, 4 - minuteY, BLUE);
         matrix.drawLine(5, 4, 5 + hourX, 4 - hourY, GREEN);
         matrix.drawPixel(5, 4, RED);
@@ -301,12 +306,12 @@ void displayClock() {
         delay(100);
         matrix.clear();
         break;
-      case 1:
-        if (ps2x.ButtonPressed(PSB_TRIANGLE)) { //press triangle to increment the minute by 5
+      case 1: //Set Time Mode
+        if (ps2x.ButtonPressed(PSB_TRIANGLE)) { //press triangle to increment the minute by 1
           setMinutes += 1;
           if (setMinutes >= 60) setMinutes = 0;
         }
-        else if (ps2x.ButtonPressed(PSB_R1)) {
+        else if (ps2x.ButtonPressed(PSB_R1)) { //Press R1 to increment the minute by 5
           setMinutes += 5;
           if (setMinutes >= 60) setMinutes = 0;
         }
@@ -321,15 +326,17 @@ void displayClock() {
           mode = 0;
         }
         else if (ps2x.ButtonPressed(PSB_CIRCLE)) mode = 0; //Press circle to cancel the set-time operation
-        
+
         float hours12 = setHours;
-        if (hours12 >= 12){ hours12 -= 12;}
+        if (hours12 >= 12) {
+          hours12 -= 12;
+        }
         //Display the current time-set variables on the clock
         matrix.drawBitmap(0, 0, clockBckgrnd,  10, 9, YELLOW);
-        minuteX = round((4 * sin((setMinutes / 30) * 3.14)));
-        minuteY = round((4 * cos((setMinutes / 30) * 3.14)));
-        hourX = round((2 * sin((hours12 / 6) * 3.14)));
-        hourY = round((2 * cos((hours12 / 6) * 3.14)));
+        minuteX = round((4 * sin((setMinutes / 30) * M_PI)));
+        minuteY = round((4 * cos((setMinutes / 30) * M_PI)));
+        hourX = round((2 * sin((hours12 / 6) * M_PI)));
+        hourY = round((2 * cos((hours12 / 6) * M_PI)));
         drawDigit(((int)setHours / 10), 0, 10, GREEN);
         drawDigit(((int)setHours % 10), 4, 10, GREEN);
         drawDigit(((int)setMinutes / 10), 3, 15, BLUE);
@@ -354,11 +361,11 @@ void drawDigit(uint8_t digit, uint8_t x, uint8_t y, uint16_t colour) {
 }
 
 /***************************************************************************************/
-/********************@@@@@@@**@@@@@@*@@@@@@@*@@@@***@@@**@@@@***************************/
-/***********************@*****@*********@****@***@***@**@*******************************/
-/***********************@*****@@@@@*****@****@@@@****@***@@@****************************/
-/***********************@*****@*********@****@**@****@******@***************************/
-/***********************@*****@@@@@@****@****@***@**@@@**@@@****************************/
+/********************@@@@@@@**@@@@@@*@@@@@@@*@@@@***@@@***@@@@***************************/
+/***********************@*****@*********@****@***@***@***@*******************************/
+/***********************@*****@@@@@*****@****@@@@****@****@@@****************************/
+/***********************@*****@*********@****@**@****@*******@***************************/
+/***********************@*****@@@@@@****@****@***@**@@@***@@@****************************/
 /***************************************************************************************/
 //(taken from te main loop of the Tetris-only version)
 void mainTetris() {
@@ -604,63 +611,137 @@ void saveShape() {
 
 void mainPong() {
   //Setup:
-  Xpos = 3;
-  Ypos = TILEHEIGHT - 1;
-  Score = 0;
-  uint8_t barSize = 3; //the size of the player bar
+  uint8_t xP1 = 3;
+  uint8_t xP2 = 3;
+  uint8_t scoreP1 = 0;
+  uint8_t scoreP2 = 0;
   uint8_t ballX = 4;
-  uint8_t ballY = 0;
+  uint8_t ballY = TILEHEIGHT/2;
   uint8_t ballDir = 0; //bit one sets X direction, bit 2 sets Y direction
-  uint8_t ballDelay = 200;
+  uint8_t ballDelay = 90;
+  printScore(scoreP1, scoreP2);
   oldTime = millis();
   newTime = oldTime;
   for (;;) {
     delay(5);
     ps2x.read_gamepad();
-    if (ps2x.Button(PSB_PAD_RIGHT) and Xpos < TILEWIDTH - barSize) {
-      Xpos++;
+    if (ps2x.Button(PSB_PAD_DOWN) and xP1 < TILEWIDTH - BARWIDTH) {
+      xP1++;
     }
-    else if (ps2x.Button(PSB_PAD_LEFT) and Xpos > 0) {
-      Xpos--;
+    else if (ps2x.Button(PSB_PAD_UP) and xP1 > 0) {
+      xP1--;
+    }
+    if (ps2x.Button(PSB_TRIANGLE) and xP2 < TILEWIDTH - BARWIDTH) {
+      xP2++;
+    }
+    else if (ps2x.Button(PSB_CROSS) and xP2 > 0) {
+      xP2--;
     }
     if (ps2x.ButtonPressed(PSB_SELECT)) { //press select to exit game:
       resetFunc();
     }
     matrix.clear();
-    matrix.drawLine(Xpos, Ypos, Xpos + (barSize - 1), Ypos, BLUE);
+    matrix.drawLine(xP1, TILEHEIGHT - 1, xP1 + (BARWIDTH - 1), TILEHEIGHT - 1, BLUE);
+    matrix.drawLine(xP2, 0, xP2 + (BARWIDTH - 1), 0, BLUE);
     matrix.drawPixel(ballX, ballY, GREEN);
     matrix.show();
-    delay(50);
+    delay(30);
     newTime = millis();
-    if (newTime > oldTime + ballDelay) {
-      if (ballX > TILEWIDTH - 1) {
-        ballDir &= 0x02; //set the LSB to 0 without affecting 2nd bit
+    if (newTime > (oldTime + ballDelay)) {
+      //Check to see if the ball has reached the side of the screen:
+      if (ballX >= TILEWIDTH - 1) {
+        ballDir &= 0x02; //set bit 1 to 0 without affecting 2nd bit
       }
       else if (ballX == 0) {
-        ballDir |= 0x01;
-      }
-      if (ballY == 0) {
-        ballDir |= 0x02;
-      }
-      else if (ballY > TILEHEIGHT - 3) {
-        ballDir &= 0x01;
+        ballDir |= 0x01; //Set bit 1 to 1 without affecting 2nd bit
       }
 
-      if (ballDir & 0x02) {
+      //Check if the ball has reached the bottom and if the bar is in the correct place to bounce it:
+      if (ballY > TILEHEIGHT - 3) {
+        if (ballX < xP1 || ballX > (xP1 + BARWIDTH - 1)) {
+          ballX = 4;
+          ballY = (TILEHEIGHT / 2);
+          ballDir = 0;
+          ballDelay = 60;
+          matrix.fillScreen(RED);
+          matrix.show();
+          scoreP2++;
+          printScore(scoreP1, scoreP2);
+          delay(500);
+        }
+        else {
+          ballDir &= 0x01; //set bit 2 to 0 without affecting 1st bit
+          ballDelay--;
+        }
+      }
+
+      //Check if the ball has reached the top of the screen and if the paddle is in the correct place to bounce it:
+      if (ballY == 1) {
+        if (ballX < xP2 || ballX > (xP2 + BARWIDTH - 1)) {
+          ballX = 4;
+          ballY = (TILEHEIGHT / 2 + 1);
+          ballDir = 2;
+          ballDelay = 60;
+          matrix.fillScreen(RED);
+          matrix.show();
+          scoreP1++;
+          printScore(scoreP1, scoreP2);
+          delay(500);
+
+        }
+        else {
+          ballDir |= 0x02; //set bit 2 to 1 without affecting the 1st bit
+          ballDelay--;
+        }
+      }
+      if (ballDir & 0x02) { //Make the ball either go up or down depending on the value of the 2nd bit of BallDir
         ballY++;
       }
       else ballY--;
-      uint8_t moves = random(1, 2);
+      uint8_t moves;
+      if (ballX < (TILEWIDTH - 3) && ballX > 2) moves = random(1, 3); //select a random number (1 or 2, since max value is exclusive) to move on the Xbar
+      else moves = 1; //Set moves to 1 if there is no room on the board to move 2 tiles
       if (ballDir & 0x01) {
         ballX += moves;
       }
       else ballX -= moves;
+      pongOver(scoreP1, scoreP2);
+      oldTime = newTime;
     }
-
-
   }
 }
-
+void printScore(uint8_t p1, uint8_t p2) {
+  scorePanel.fillScreen(0);
+  scorePanel.setCursor(0, 0);
+  scorePanel.print(p1);
+  scorePanel.print(":");
+  scorePanel.print(p2);
+  scorePanel.write();
+}
+void pongOver(uint8_t p1, uint8_t p2) {
+  if (p1 > PONGSCORE-1) {
+    scorePanel.fillScreen(0);
+    scorePanel.setCursor(0, 0);
+    scorePanel.print("P1WIN");
+    scorePanel.write();
+    while (1) {
+      delay(10);
+      ps2x.read_gamepad();
+      if (ps2x.ButtonPressed(PSB_SELECT)) resetFunc();
+    }
+  }
+  else if (p2 > PONGSCORE-1) {
+    scorePanel.fillScreen(0);
+    scorePanel.setCursor(0, 0);
+    scorePanel.print("P2WIN");
+    scorePanel.write();
+    while (1) {
+      delay(10);
+      ps2x.read_gamepad();
+      if (ps2x.ButtonPressed(PSB_SELECT)) resetFunc();
+    }
+  }
+}
 
 /*
    Backgrounds. These are shown during the menu
