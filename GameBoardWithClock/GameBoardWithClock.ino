@@ -221,6 +221,7 @@ void loop() { //main menu / game select screen.
       matrix.setCursor(3, 3);
       matrix.clear();
       matrix.print(pendingSelect);
+      clockBackground();
       matrix.show();
       if (ps2x.ButtonPressed(PSB_START)) {
         matrix.clear();
@@ -746,6 +747,14 @@ void pongOver(uint8_t p1, uint8_t p2) {
 /*
    Backgrounds. These are shown during the menu
 */
+void clockBackground(){
+  matrix.drawCircle(5, TILEHEIGHT-5, 4, RED);
+  matrix.drawLine(5, TILEHEIGHT-5, 5, TILEHEIGHT - 9, BLUE);
+  matrix.drawLine(5, TILEHEIGHT-5, 8, TILEHEIGHT-5, GREEN);
+  matrix.drawPixel(5,TILEHEIGHT-5, RED);
+  matrix.show();
+}
+
 void tetrisBackground() {
   rotation = 0;
   shape = 2;
