@@ -9,24 +9,11 @@
 #include <PS2X_lib.h> //Library for PS2 controller
 #include <Max72xxPanel.h> //Library for 8x8 Dot matrices using MAX72xx driver IC's
 #include <DSRTCLib.h> //Library for DS1339 RTC module
+#include <SPI.h>
 
 //Amount of selectable items in the main menu (zero indexed)
 #define gameAmount 2
 
-//the score in PONG where the game is won:
-#define PONGSCORE 20
-//the width of the bar in PONG
-#define BARWIDTH 3
-
-//pins for PS2 controller
-#define PS2_CMD   7
-#define PS2_DAT   8
-#define PS2_CLK   9
-#define PS2_SEL   10
-
-//pins for the RTC module Interrupt
-#define INT_PIN 2
-#define INT_NUMBER 0
 
 
 // Color definitions
@@ -42,51 +29,61 @@
 #define WHITE    0xFFFF
 #define BOARDCOLOUR matrix.Color(0x00, 0xCE,0xBF) //The colour a pixel will turn into once it has had a bottom collision in Tetris
 
+/**
+ * @brief Main "Gameboard" class, inheriting from the Adafruit matrix to include all required functions for writing and manipulating the display
+ * 
+ */
+class ArexxGameBoard: public Adafruit_NeoMatrix{
+public:
+    /**
+     * @brief Construct a new Arexx Game Board object
+     * 
+     * @param pin the pin connected to the display
+     * @param width the amount of horizontal pixels
+     * @param height the amount of vertical pixels
+     * @param orientation "Adafruit_NeoMatrix" orientation style
+     * @param ledType "Adafruit_NeoPixel" pixeltype
+     * @param scorePin pin connected to the ChipSelect of the Score Panel
+     */
+    ArexxGameBoard(uint8_t pin , int width , int height , uint8_t orientation, neoPixelType ledType, uint8_t scorePin);
 
-//Starting position:
-extern int8_t Xpos;
-extern int8_t Ypos; //start of the board is at y=0, shape will start above the board and scroll inside
+    /**
+     * @brief Construct a new Arexx Game Board object
+     * 
+     * @param pin the pin connected to the display
+     * @param width the amount of horizontal pixels
+     * @param height the amount of vertical pixels
+     * @param orientation "Adafruit_NeoMatrix" orientation style
+     * @param ledType "Adafruit_NeoPixel" pixeltype
+     * @param scoreComms SPI class to run the scoreboard on
+     */
+    ArexxGameBoard(uint8_t pin , int width , int height , uint8_t orientation, neoPixelType ledType, SPIClass scoreComms);
 
-//A global variable in which to store the currently selected shape in Tetris:
-extern uint16_t shapeMap;
+    void update();
 
-//The amount of time before the block moves down 1 space. gets shorter proporionally to the score of the current round. (game gets faster).
-extern uint16_t downDelay;
+    int8_t xPos;
+    int8_t yPos;
 
-//variables for the millis() function.
-extern unsigned long newTime;
-extern unsigned long oldTime;
 
-extern uint32_t Score;
-extern unsigned int value;
-extern int error;
-extern uint8_t pendingSelect;
+private:
+    
+    unsigned long newTime;
+    unsigned long oldTime;
 
-//definitions for the main LED-matrix/display:
-#define LEDPIN 6
-#define TILEWIDTH 10      //the amount of horizontal pixels in a single panel
-#define TILEHEIGHT 20     //the amount of vertical pixels in a single panel
-#define PANELTYPE  (NEO_MATRIX_BOTTOM + NEO_MATRIX_LEFT + NEO_MATRIX_COLUMNS + NEO_MATRIX_ZIGZAG)
-#define XTILES 1          //the amount of "tiles" (matrices) in the horizontal direction
-#define YTILES 1          //the amount of tiles in the vertical direction
-#define TILEORIENTATION (NEO_TILE_TOP   + NEO_TILE_LEFT   + NEO_TILE_COLUMNS   + NEO_TILE_PROGRESSIVE)
-extern Adafruit_NeoMatrix matrix;
+    uint32_t score;
+    uint16_t value;
+    int16_t error;
+    uint8_t selector;
 
-//definitions for the scoreboard:
-#define SCOREPIN 4
-#define SCOREPANELAMOUNT 8
-extern Max72xxPanel scorePanel;
+    uint8_t BoardMemory[];
 
-//an array to store all the already placed blocks in
-extern uint16_t Board[TILEHEIGHT + 5];
+    Max72xxPanel scorePanel;
+};
 
-//Creating the controller object:
-extern PS2X ps2x;
 
-//creating the RTC object:
-extern DS1339 RTC;
 
 //Allows call to "resetFunc()" to reset the arduino via software
 extern void(* resetFunc) (void);//declare reset function at address 0
+
 
 #endif //#ifdef  __AREXX_GAMEBOARD_H

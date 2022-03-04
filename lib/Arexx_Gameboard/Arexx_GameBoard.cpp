@@ -1,23 +1,38 @@
 #include "Arexx_GameBoard.h"
 
-Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(TILEWIDTH, TILEHEIGHT, XTILES, YTILES, LEDPIN, PANELTYPE + TILEORIENTATION, NEO_GRB + NEO_KHZ800);
-Max72xxPanel scorePanel = Max72xxPanel(SCOREPIN, SCOREPANELAMOUNT, 1);
-PS2X ps2x;
-DS1339 RTC = DS1339(INT_PIN, INT_NUMBER);
+const uint8_t BoardMemoryOverhead = 5;
 
-int8_t Xpos = 3;
-int8_t Ypos = -4; // start of the board is at y=0, shape will start above the board and scroll inside
-uint32_t Score = 0;
-uint16_t value = 0;
-int16_t error = 0;
-uint8_t pendingSelect = 0;
-uint16_t shapeMap;
+ArexxGameBoard::ArexxGameBoard(uint8_t pin, int width, int height, uint8_t orientation, neoPixelType ledType, uint8_t scorePin) : Adafruit_NeoMatrix(width, height, pin, orientation, ledType),
+                                                                                                                                  scorePanel(scorePin, 5, 0)
+{
+    // Initialise position and time values as 0
+    xPos = 0;
+    yPos = 0;
 
-unsigned long newTime;
-unsigned long oldTime;
+    newTime = 0;
+    oldTime = 0;
 
-uint16_t downDelay = 200;
+    score = 0;
+    value = 0;
+    error = 0;
+    selector = 0;
 
-uint16_t Board[TILEHEIGHT + 5];
+    // Allocate 5 extra rows of board memory for "off screen storage" (used in tetris for placing blocks before they appear)
+    BoardMemory[width * (height + BoardMemoryOverhead)];
+}
 
-void(* resetFunc) (void);
+/**
+ * @brief Draw all data in BoardMemory to the display
+ *
+ */
+void ArexxGameBoard::update()
+{
+    for (uint8_t yIterator = 0; yIterator < height(); yIterator++){
+        for (uint8_t xIterator = 0; xIterator < width(); xIterator++){
+            drawPixel(xIterator, yIterator, BoardMemory[(xIterator * yIterator) + yIterator + (BoardMemoryOverhead * yIterator)]);
+        }
+    }
+    show();
+}
+
+void (*resetFunc)(void);
