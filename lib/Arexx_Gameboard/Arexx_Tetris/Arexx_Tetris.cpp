@@ -41,6 +41,8 @@ const uint16_t Shapes[28] = { //Consideration: store these in PROGMEM as well?
 
 int8_t shape;
 int8_t rotation;
+uint16_t downDelay = 200;
+uint16_t shapeMap;
 
 //Give every shape a different colour
 const uint16_t ShapeColours[7] = {BLUE, GREEN, MAGENTA, DARKGREEN, YELLOW, RED, ORANGE};

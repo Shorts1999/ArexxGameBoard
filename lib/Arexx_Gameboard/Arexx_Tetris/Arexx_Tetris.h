@@ -8,6 +8,12 @@
 extern int8_t shape;
 extern int8_t rotation;
 
+//A global variable in which to store the currently selected shape in Tetris:
+extern uint16_t shapeMap;
+
+//The amount of time before the block moves down 1 space. gets shorter proporionally to the score of the current round. (game gets faster).
+extern uint16_t downDelay;
+
 void mainTetris();
 
 void drawShape();

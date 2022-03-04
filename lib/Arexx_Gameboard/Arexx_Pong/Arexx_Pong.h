@@ -3,6 +3,11 @@
 
 #include "Arexx_GameBoard.h"
 
+//the score in PONG where the game is won:
+#define PONGSCORE 20
+//the width of the bar in PONG
+#define BARWIDTH 3
+
 void mainPong();
 
 void printScore(uint8_t Player1Score, uint8_t Player2Score);
