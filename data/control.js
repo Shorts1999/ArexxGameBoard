@@ -1,8 +1,8 @@
 let buttonIds = {
-    UpArrow: { id: 10 },
-    DownArrow: { id: 11 },
-    LeftArrow: { id: 12 },
-    RightArrow: { id: 13 },
+    UpPad: { id: 10 },
+    DownPad: { id: 11 },
+    LeftPad: { id: 12 },
+    RightPad: { id: 13 },
     ButtonA: { id: 20 },
     ButtonB: { id: 21 },
     ButtonStart: { id: 30 },

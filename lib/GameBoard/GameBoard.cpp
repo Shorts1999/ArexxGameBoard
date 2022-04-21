@@ -31,10 +31,10 @@ void GameBoard::setPixel(uint16_t x, uint16_t y, uint32_t colour) {
 
 
 //Gettters
-uint8_t GameBoard::width() {
+int8_t GameBoard::width() {
     return mWidth;
 }
-uint8_t GameBoard::height() {
+int8_t GameBoard::height() {
     return mHeight;
 }
 uint32_t GameBoard::getPixel(int x, int y) {

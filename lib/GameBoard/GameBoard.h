@@ -62,8 +62,8 @@ public:
     void moveCursor(int16_t x, int16_t y);
     void moveCursor(int16_t x, int16_t y, uint32_t colour);
     uint32_t getPixel(int x, int y);
-    uint8_t width();
-    uint8_t height();
+    int8_t width();
+    int8_t height();
 
     //Graphic primitives:
     void drawLineVert(int y1, int y2, uint32_t colour);
@@ -85,8 +85,8 @@ private:
     uint8_t selector;
     uint8_t mPin;
 
-    uint8_t mWidth;
-    uint8_t mHeight;
+    int8_t mWidth;
+    int8_t mHeight;
 
     //Max72xxPanel scorePanel;
 };

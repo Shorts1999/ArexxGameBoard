@@ -5,12 +5,7 @@
 #include <Tetris/Tetris.h>
 #include <SPIFFS.h>
 
-#define DEBUG
-#if defined(DEBUG)
-#define DEBUG_PRINT(x, ...) Serial.printf(x, ##__VA_ARGS__)
-#else
-#define DEBUG_PRINT(x, ...) 
-#endif
+#include <simpleDebug.h>
 
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
@@ -84,6 +79,7 @@ void setup() {
                 break;
             case BUTTON_DOWN:
                 DEBUG_PRINT("Button down was pressed");
+                tetris.speedDrop();
                 break;
             case BUTTON_LEFT:
                 DEBUG_PRINT("Button left was pressed");
@@ -95,10 +91,11 @@ void setup() {
                 break;
             case BUTTON_A:
                 DEBUG_PRINT("Button A was pressed");
-                tetris.rotate();
+                tetris.rotate(ROTATE_CLOCKWISE);
                 break;
             case BUTTON_B:
                 DEBUG_PRINT("Button B was pressed");
+                tetris.rotate(ROTATE_ANTICLOCKWISE);
                 break;
             case BUTTON_START:
                 DEBUG_PRINT("Button Start was pressed");
@@ -115,10 +112,11 @@ void setup() {
 
     webServer.begin();
 
-    FastLED.setBrightness(60);
+    FastLED.setBrightness(50);
     FastLED.clear();
 
     FastLED.show();
+    tetris.run();
 }
 
 void loop() {
