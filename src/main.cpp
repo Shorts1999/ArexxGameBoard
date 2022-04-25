@@ -112,7 +112,7 @@ void setup() {
 
     webServer.begin();
 
-    FastLED.setBrightness(50);
+    FastLED.setBrightness(100);
     FastLED.clear();
 
     FastLED.show();
