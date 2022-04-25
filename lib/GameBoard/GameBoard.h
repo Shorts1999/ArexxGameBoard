@@ -44,7 +44,7 @@ public:
      * @param ledType "Adafruit_NeoPixel" pixeltype
      * @param scorePin pin connected to the ChipSelect of the Score Panel
      */
-    GameBoard(uint8_t pin, const uint32_t width, const uint32_t height, uint8_t scorePin);
+    GameBoard(uint8_t pin, const uint32_t width, const uint32_t height, bool useRows, uint8_t scorePin);
 
     /**
      * @brief Construct a new  Game Board object
@@ -58,12 +58,21 @@ public:
      */
     GameBoard(uint8_t pin, uint32_t width, uint32_t height, SPIClass scoreComms);
 
+    void (GameBoard::*setPixelFormat)(uint16_t x, uint16_t y, uint32_t colour);
     void setPixel(uint16_t, uint16_t, uint32_t);
+    uint32_t (GameBoard::*getPixelFormat)(int16_t x, int16_t y);
+    uint32_t getPixel(int16_t x, int16_t y);
+
     void moveCursor(int16_t x, int16_t y);
     void moveCursor(int16_t x, int16_t y, uint32_t colour);
-    uint32_t getPixel(int x, int y);
     int8_t width();
     int8_t height();
+
+    //column/row functions:
+    void setPixelColumns(uint16_t x, uint16_t y, uint32_t colour);
+    void setPixelRows(uint16_t x, uint16_t y, uint32_t colour);
+    uint32_t getPixelColumns(int16_t, int16_t);
+    uint32_t getPixelRows(int16_t, int16_t);
 
     //Graphic primitives:
     void drawLineVert(int y1, int y2, uint32_t colour);
