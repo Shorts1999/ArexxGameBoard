@@ -2,7 +2,7 @@
 
 const uint8_t BoardMemoryOverhead = 0;
 
-GameBoard::GameBoard(uint8_t pin, uint32_t width, uint32_t height, bool useRows=true,uint8_t scorePin) {
+GameBoard::GameBoard(uint8_t pin, uint32_t width, uint32_t height, bool useRows=true) {
     // Initialise position and time values as 0
     xPos = 0;
     yPos = 0;
@@ -22,8 +22,8 @@ GameBoard::GameBoard(uint8_t pin, uint32_t width, uint32_t height, bool useRows=
     FastLED.clear();    //Empty all pixels in the buffer (needed with heap-allocated CRGB buffer)
 
     //Add drawing handlers depending on the display begin made of rows or columns
-    GameBoard::setPixelFormat = useRows ? GameBoard::setPixelRows : GameBoard::setPixelColumns;
-    GameBoard::getPixelFormat = useRows ? &GameBoard::getPixelRows : GameBoard::getPixelColumns;
+    setPixelFormat = (useRows == Orientation::Rows ? (&GameBoard::setPixelRows) : (&GameBoard::setPixelColumns));
+    getPixelFormat = (useRows == Orientation::Rows ? (&GameBoard::getPixelRows) : (&GameBoard::getPixelColumns));
 }
 
 void GameBoard::setPixel(uint16_t x, uint16_t y, uint32_t colour){
@@ -46,10 +46,10 @@ void GameBoard::setPixelRows(uint16_t x, uint16_t y, uint32_t colour) {
 }
 
 void GameBoard::setPixelColumns(uint16_t x, uint16_t y, uint32_t colour){
-    if((x>=mWidth) || (y>=mHeight)) return;
+    if((x>=mWidth) || (y>=mHeight)) return; //Return if out of bounds
 
     if(x%2) mMatrix[ ( (mHeight - y - 1) + (x*mHeight))] = colour;
-    else mMatrix[y + (x*mHeight)];
+    else mMatrix[y + (x*mHeight)] = colour;
 }
 
 uint32_t GameBoard::getPixelRows(int16_t x, int16_t y) {

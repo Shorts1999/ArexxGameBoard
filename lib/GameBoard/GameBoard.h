@@ -44,19 +44,12 @@ public:
      * @param ledType "Adafruit_NeoPixel" pixeltype
      * @param scorePin pin connected to the ChipSelect of the Score Panel
      */
-    GameBoard(uint8_t pin, const uint32_t width, const uint32_t height, bool useRows, uint8_t scorePin);
+    GameBoard(uint8_t pin, const uint32_t width, const uint32_t height, bool useRows);
 
-    /**
-     * @brief Construct a new  Game Board object
-     *
-     * @param pin the pin connected to the display
-     * @param width the amount of horizontal pixels
-     * @param height the amount of vertical pixels
-     * @param orientation "Adafruit_NeoMatrix" orientation style
-     * @param ledType "Adafruit_NeoPixel" pixeltype
-     * @param scoreComms SPI class to run the scoreboard on
-     */
-    GameBoard(uint8_t pin, uint32_t width, uint32_t height, SPIClass scoreComms);
+    enum Orientation{
+        Rows=true,
+        Columns=false,
+    };
 
     void (GameBoard::*setPixelFormat)(uint16_t x, uint16_t y, uint32_t colour);
     void setPixel(uint16_t, uint16_t, uint32_t);
