@@ -1,6 +1,6 @@
 #ifndef __SIMPLEDEBUG_H
 #define __SIMPLEDEBUG_H
-
+#define DEBUG
 #if defined(DEBUG)
 #define DEBUG_PRINT(x, ...) Serial.printf(x, ##__VA_ARGS__)
 #else

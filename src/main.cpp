@@ -4,7 +4,8 @@
 #include <GameBoard.h>
 #include <Tetris/Tetris.h>
 #include <SPIFFS.h>
-
+#include <ArduinoJson.h>
+#define DEBUG 1
 #include <simpleDebug.h>
 
 #include <AsyncTCP.h>
@@ -15,6 +16,7 @@
 #define MATRIXPIN 13
 #define MATRIXWIDTH 10
 #define MATRIXHEIGHT 20
+
 #define SCOREPIN 6
 
 #define BUTTON_UP 10
@@ -27,10 +29,11 @@
 #define BUTTON_SELECT 31
 
 uint32_t colour;
-GameBoard gameboard(MATRIXPIN, MATRIXWIDTH, MATRIXHEIGHT, SCOREPIN);
+GameBoard gameboard(MATRIXPIN, MATRIXWIDTH, MATRIXHEIGHT, GameBoard::Orientation::Columns);
 
 AsyncWebServer webServer(80);
 Tetris tetris(gameboard, webServer);
+bool gameHasBegun = false;
 //Function prototypes
 void startingAnimation();
 
@@ -44,7 +47,6 @@ void setup() {
     }
     Serial.print("Connecting");
     WiFi.mode(WIFI_MODE_STA);
-
     //Set up Wifimanager for provisioning of Wi-Fi credentials
     WiFiManager wm;
     wm.autoConnect("ESP32-GamePanel");
@@ -63,6 +65,17 @@ void setup() {
     });
     webServer.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send(SPIFFS, "/style.css", "text/css", false);
+    });
+    webServer.on("/update", HTTP_GET, [](AsyncWebServerRequest *request){
+        	uint16_t score = tetris.getScore();
+            bool isGameOver = tetris.isGameOver();
+            DynamicJsonDocument jsonDoc(256);
+            jsonDoc["score"] = score;
+            jsonDoc["state"] = isGameOver;
+            String jsonString;
+            serializeJson(jsonDoc, jsonString);
+            DEBUG_PRINT(jsonString.c_str());
+            request->send(200, "text/json", jsonString);
     });
     webServer.on("/button", HTTP_POST, [](AsyncWebServerRequest *request) {
         int paramCnt = request->params();
@@ -99,6 +112,7 @@ void setup() {
                 break;
             case BUTTON_START:
                 DEBUG_PRINT("Button Start was pressed");
+                gameHasBegun=true; //Start the game on start press
                 break;
             case BUTTON_SELECT:
                 DEBUG_PRINT("Button Select was pressed");
@@ -110,12 +124,15 @@ void setup() {
 
     });
 
-    webServer.begin();
 
-    FastLED.setBrightness(100);
+    webServer.begin();
+    
+    FastLED.setBrightness(20);
     FastLED.clear();
 
     FastLED.show();
+    while(!gameHasBegun){ delay(100);}
+    DEBUG_PRINT("STARTING GAME");
     tetris.run();
 }
 
