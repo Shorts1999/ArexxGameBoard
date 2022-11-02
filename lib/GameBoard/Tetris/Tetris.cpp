@@ -150,7 +150,11 @@ uint8_t Tetris::rightCollisionCheck() {
     return 0;
 }
 
-//Check if the bottom has been reached or if there is another block directly underneath, making the block stop falling and lock in position
+/**
+ * @brief Check for a collision on the bottom side
+ * 
+ * @return uint8_t: 0 if no collision, 1 if collision that should block, 2 if collision that should cause Game Over
+ */
 uint8_t Tetris::bottomCollisionCheck() {
     uint16_t shapeMap = Shapes[(currentShape * 4) + currentRotation];
     for (uint8_t y = 0; y < 4; y++) {
@@ -278,5 +282,13 @@ void Tetris::speedDrop() {
 
 void Tetris::gameOver() {
     DEBUG_PRINT("GAME OVER");
+    mGameOver = true;
     while (1) { delay(1000); }
+}
+
+uint16_t Tetris::getScore(){
+    return lineCount;
+}
+bool Tetris::isGameOver(){
+    return mGameOver;
 }

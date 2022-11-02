@@ -29,6 +29,8 @@ public:
     void saveShape();
     void run();
     void speedDrop();
+    uint16_t getScore();
+    bool isGameOver();
 
 private:
     //MEMBERS:
@@ -41,6 +43,7 @@ private:
     uint16_t downDelay = 100;
     uint16_t totalDropCount = 10;
     uint16_t lineCount = 0;
+    bool mGameOver = false;
 
     //METHODS:
 
@@ -49,6 +52,7 @@ private:
     uint8_t bottomCollisionCheck();
     uint8_t rotationCollisionCheck();
     uint16_t lineDetect();
+    
     void clearLine(uint8_t);
     void drawShape();
     void removeShapeFromBuffer();
