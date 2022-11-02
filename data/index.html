@@ -2,12 +2,35 @@
 <meta name="viewport" content="width=device-width, user-scalable=no">
 
 <head>
-    <link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+    <!-- <link rel="stylesheet" type="text/css" href="style.css" media="screen" /> -->
+    <style>
+        .text{
+            font-size: 4vw;
+            color: red;
+            font-family: Arial;
+
+            position: absolute;
+            top: 0px;
+            left: 40vw;
+        }
+        #gameOverText{
+            top: 4vw;
+        }
+        .controller{
+            position: absolute;
+            left: 0px;
+            top: 0px;
+            width: 100vw;
+            height: 100vh;
+        }
+
+    </style>
 </head>
 
 
 <body>
-    <svg width="device-width" height="auto" viewBox="0 0 323 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+   
+    <svg class="controller" width="device-width" height="auto" viewBox="0 0 323 130" fill="none" xmlns="http://www.w3.org/2000/svg">
         <g id="NESController">
             <rect width="323" height="130" fill="#C4C4C4" />
             <rect id="Background" x="7" y="21" width="309" height="102" fill="black" />
@@ -66,8 +89,8 @@
         </g>
     </svg>
 
-
-
+    <p id="scoreText" class="text">Score: 0</p>
+    <p id="gameOverText" class="text"></p>
 
     <script src="control.js"></script>
 </body>

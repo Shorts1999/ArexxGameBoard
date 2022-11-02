@@ -23,3 +23,12 @@ for (const key in buttonIds) {
     let btn = document.getElementById(key);
     btn.onclick = (e) => buttonHandler(e);
 }
+
+setInterval((e) => {
+    fetch("/update")
+        .then(response => response.json())
+        .then(responseJson => {
+            document.getElementById("scoreText").innerText=`Score: ${responseJson["score"]}`;
+            if(responseJson["state"]==true){ document.getElementById("gameOverText").innerText=`Game Over`;}
+        })
+}, 2000);
