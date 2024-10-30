@@ -5,6 +5,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <FastLED.h>
+#include <FastLed_RGBW.h>
 // #include <Max72xxPanel.h> //Library for 8x8 Dot matrices using MAX72xx driver IC's
 #include <SPI.h>
 
@@ -46,14 +47,14 @@ public:
      */
     GameBoard(uint8_t pin, const uint32_t width, const uint32_t height, bool useRows);
 
-    enum Orientation{
-        Rows=true,
-        Columns=false,
+    enum Orientation {
+        Rows = true,
+        Columns = false,
     };
 
-    void (GameBoard::*setPixelFormat)(uint16_t x, uint16_t y, uint32_t colour);
+    void (GameBoard:: *setPixelFormat)(uint16_t x, uint16_t y, uint32_t colour);
     void setPixel(uint16_t, uint16_t, uint32_t);
-    uint32_t (GameBoard::*getPixelFormat)(int16_t x, int16_t y);
+    uint32_t(GameBoard:: *getPixelFormat)(int16_t x, int16_t y);
     uint32_t getPixel(int16_t x, int16_t y);
 
     void moveCursor(int16_t x, int16_t y);
@@ -74,7 +75,12 @@ public:
 
     int16_t xPos;
     int16_t yPos;
+#if defined(RGBW)
+    CRGBW *mMatrix;
+    CRGB *mLedsRGB;
+#else
     CRGB *mMatrix;
+#endif
 
 private:
 
