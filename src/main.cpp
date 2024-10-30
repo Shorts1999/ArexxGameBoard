@@ -45,11 +45,15 @@ void setup() {
         DEBUG_PRINT("An Error has occurred while mounting SPIFFS");
         return;
     }
-    Serial.print("Connecting");
-    WiFi.mode(WIFI_MODE_STA);
+    Serial.print("Connecting\n");
+    WiFi.mode(WIFI_MODE_AP);
+    WiFi.softAP("TetrisBoard");
+    IPAddress IP = WiFi.softAPIP();
+    Serial.print("AP IP address: ");
+    Serial.println(IP);
     //Set up Wifimanager for provisioning of Wi-Fi credentials
-    WiFiManager wm;
-    wm.autoConnect("ESP32-GamePanel");
+    // WiFiManager wm;
+    // wm.autoConnect("ESP32-GamePanel");
     delay(1000);
 
     //initialise random number generation
@@ -66,16 +70,16 @@ void setup() {
     webServer.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send(SPIFFS, "/style.css", "text/css", false);
     });
-    webServer.on("/update", HTTP_GET, [](AsyncWebServerRequest *request){
-        	uint16_t score = tetris.getScore();
-            bool isGameOver = tetris.isGameOver();
-            DynamicJsonDocument jsonDoc(256);
-            jsonDoc["score"] = score;
-            jsonDoc["state"] = isGameOver;
-            String jsonString;
-            serializeJson(jsonDoc, jsonString);
-            DEBUG_PRINT(jsonString.c_str());
-            request->send(200, "text/json", jsonString);
+    webServer.on("/update", HTTP_GET, [](AsyncWebServerRequest *request) {
+        uint16_t score = tetris.getScore();
+        bool isGameOver = tetris.isGameOver();
+        DynamicJsonDocument jsonDoc(256);
+        jsonDoc["score"] = score;
+        jsonDoc["state"] = isGameOver;
+        String jsonString;
+        serializeJson(jsonDoc, jsonString);
+        DEBUG_PRINT(jsonString.c_str());
+        request->send(200, "text/json", jsonString);
     });
     webServer.on("/button", HTTP_POST, [](AsyncWebServerRequest *request) {
         int paramCnt = request->params();
@@ -112,7 +116,7 @@ void setup() {
                 break;
             case BUTTON_START:
                 DEBUG_PRINT("Button Start was pressed");
-                gameHasBegun=true; //Start the game on start press
+                gameHasBegun = true; //Start the game on start press
                 break;
             case BUTTON_SELECT:
                 DEBUG_PRINT("Button Select was pressed");
@@ -126,12 +130,12 @@ void setup() {
 
 
     webServer.begin();
-    
-    FastLED.setBrightness(20);
+    DEBUG_PRINT("Server started\n");
+    FastLED.setBrightness(120);
     FastLED.clear();
 
     FastLED.show();
-    while(!gameHasBegun){ delay(100);}
+    while (!gameHasBegun) { delay(100); }
     DEBUG_PRINT("STARTING GAME");
     tetris.run();
 }
