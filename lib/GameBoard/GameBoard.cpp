@@ -2,7 +2,7 @@
 
 const uint8_t BoardMemoryOverhead = 0;
 
-GameBoard::GameBoard(uint8_t pin, uint32_t width, uint32_t height, bool useRows=true) {
+GameBoard::GameBoard(uint8_t pin, uint32_t width, uint32_t height, bool useRows = true) {
     // Initialise position and time values as 0
     xPos = 0;
     yPos = 0;
@@ -17,8 +17,15 @@ GameBoard::GameBoard(uint8_t pin, uint32_t width, uint32_t height, bool useRows=
 
     mWidth = width;
     mHeight = height;
+#if defined(RGBW)
+    mMatrix = new CRGBW[width * height];
+    mLedsRGB = (CRGB *)&mMatrix[0];
+    FastLED.addLeds<WS2812B, MATRIXPIN>(mLedsRGB, getRGBWsize(width * height));
+#else
     mMatrix = new CRGB[width * height];
     FastLED.addLeds<WS2812B, MATRIXPIN>(mMatrix, width * height);
+#endif
+
     FastLED.clear();    //Empty all pixels in the buffer (needed with heap-allocated CRGB buffer)
 
     //Add drawing handlers depending on the display begin made of rows or columns
@@ -26,8 +33,8 @@ GameBoard::GameBoard(uint8_t pin, uint32_t width, uint32_t height, bool useRows=
     getPixelFormat = (useRows == Orientation::Rows ? (&GameBoard::getPixelRows) : (&GameBoard::getPixelColumns));
 }
 
-void GameBoard::setPixel(uint16_t x, uint16_t y, uint32_t colour){
-    (this->*setPixelFormat)(x,y,colour);
+void GameBoard::setPixel(uint16_t x, uint16_t y, uint32_t colour) {
+    (this->*setPixelFormat)(x, y, colour);
 }
 
 //Gettters
@@ -45,11 +52,11 @@ void GameBoard::setPixelRows(uint16_t x, uint16_t y, uint32_t colour) {
     else mMatrix[x + (y * mWidth)] = colour;
 }
 
-void GameBoard::setPixelColumns(uint16_t x, uint16_t y, uint32_t colour){
-    if((x>=mWidth) || (y>=mHeight)) return; //Return if out of bounds
+void GameBoard::setPixelColumns(uint16_t x, uint16_t y, uint32_t colour) {
+    if ((x >= mWidth) || (y >= mHeight)) return; //Return if out of bounds
 
-    if(x%2) mMatrix[ ( (mHeight - y - 1) + (x*mHeight))] = colour;
-    else mMatrix[y + (x*mHeight)] = colour;
+    if (x % 2) mMatrix[((mHeight - y - 1) + (x * mHeight))] = colour;
+    else mMatrix[y + (x * mHeight)] = colour;
 }
 
 uint32_t GameBoard::getPixelRows(int16_t x, int16_t y) {
@@ -88,16 +95,16 @@ uint32_t GameBoard::getPixelColumns(int16_t x, int16_t y) {
 
     }
     //no else needed due to return in if branch
-    uint8_t red = mMatrix[y + (x*mHeight)].red;
-    uint8_t green = mMatrix[y + (x*mHeight)].green;
-    uint8_t blue = mMatrix[y + (x*mHeight)].blue;
+    uint8_t red = mMatrix[y + (x * mHeight)].red;
+    uint8_t green = mMatrix[y + (x * mHeight)].green;
+    uint8_t blue = mMatrix[y + (x * mHeight)].blue;
 
     uint32_t colour = red << 16 | green << 8 | blue;
     return colour;
 }
 
-uint32_t GameBoard::getPixel(int16_t x, int16_t y){
-    return (this->*getPixelFormat)(x,y);
+uint32_t GameBoard::getPixel(int16_t x, int16_t y) {
+    return (this->*getPixelFormat)(x, y);
 }
 
 void GameBoard::moveCursor(int16_t x, int16_t y, uint32_t colour = 0) {
