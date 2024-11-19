@@ -13,7 +13,7 @@
 #define gameAmount 2
 
 #ifndef MATRIXPIN
-#define MATRIXPIN 13
+#define MATRIXPIN 12
 #endif
 
 // Color definitions

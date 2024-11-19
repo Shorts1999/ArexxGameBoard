@@ -13,7 +13,6 @@
 
 // #include <webHelper.h>
 
-#define MATRIXPIN 13
 #define MATRIXWIDTH 10
 #define MATRIXHEIGHT 20
 
@@ -29,7 +28,7 @@
 #define BUTTON_SELECT 31
 
 uint32_t colour;
-GameBoard gameboard(MATRIXPIN, MATRIXWIDTH, MATRIXHEIGHT, GameBoard::Orientation::Columns);
+GameBoard gameboard(MATRIXPIN, MATRIXWIDTH, MATRIXHEIGHT, GameBoard::Orientation::Rows);
 
 AsyncWebServer webServer(80);
 Tetris tetris(gameboard, webServer);
@@ -131,7 +130,7 @@ void setup() {
 
     webServer.begin();
     DEBUG_PRINT("Server started\n");
-    FastLED.setBrightness(120);
+    FastLED.setBrightness(20);
     FastLED.clear();
 
     FastLED.show();
