@@ -3,8 +3,7 @@
 #include <SPIFFS.h>
 #include <GameBoard.h>
 
-#include <AsyncTCP.h>
-#include <ESPAsyncWebServer.h>
+#include <ESP32Wiimote.h>
 
 // #define DEBUG
 #include <simpleDebug.h>
@@ -15,7 +14,7 @@
 class Tetris {
 public:
     //Constructor:
-    Tetris(GameBoard &gameboard, AsyncWebServer &server);
+    Tetris(GameBoard &gameboard, ESP32Wiimote &wiimote);
 
     //MEMBERS:
 
@@ -35,13 +34,13 @@ public:
 private:
     //MEMBERS:
     GameBoard &mGameBoard;
-    AsyncWebServer &mWebServer;
+    ESP32Wiimote &mWiimote;
 
     uint8_t currentShape;
     uint8_t currentRotation;
 
-    uint16_t downDelay = 100;
-    uint16_t totalDropCount = 10;
+    uint16_t downDelay = 10;
+    uint16_t totalDropCount = 100;
     uint16_t lineCount = 0;
     bool mGameOver = false;
 
@@ -57,6 +56,7 @@ private:
     void drawShape();
     void removeShapeFromBuffer();
     void gameOver();
+    void resetGame();
 
     //DESTRUCTOR:
 };

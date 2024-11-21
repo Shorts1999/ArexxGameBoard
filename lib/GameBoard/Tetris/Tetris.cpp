@@ -46,7 +46,7 @@ const uint16_t Shapes[28] = { //Consideration: store these in PROGMEM as well?
 
 const uint32_t shapeColours[7] = { CRGB::Blue, CRGB::Green, CRGB::Magenta,CRGB::Aqua, CRGB::Yellow, CRGB::Red, CRGB::Orange };
 
-Tetris::Tetris(GameBoard &gameboard, AsyncWebServer &server) : mGameBoard(gameboard), mWebServer(server) {
+Tetris::Tetris(GameBoard &gameboard, ESP32Wiimote &wiimote) : mGameBoard(gameboard), mWiimote(wiimote) {
 
 }
 int8_t Tetris::rotate(bool antiClockwise) {
@@ -152,7 +152,7 @@ uint8_t Tetris::rightCollisionCheck() {
 
 /**
  * @brief Check for a collision on the bottom side
- * 
+ *
  * @return uint8_t: 0 if no collision, 1 if collision that should block, 2 if collision that should cause Game Over
  */
 uint8_t Tetris::bottomCollisionCheck() {
@@ -264,20 +264,55 @@ void Tetris::run() {
     currentShape = random(7);
     currentRotation = 0;
     mGameBoard.xPos = (mGameBoard.width() / 2) - 2; mGameBoard.yPos = mGameBoard.height() - 1;
+    mWiimote.init();
+    uint16_t dropCounter = 0;
+    ButtonState buttonMem;
     while (running) {
-        for (uint8_t dropCounter = 0; dropCounter < totalDropCount; dropCounter++) {
-            delay(downDelay);
+
+        //Check for inputs:
+        mWiimote.task();
+        //Respond to button inputs:
+        if (mWiimote.available() > 0) {
+            ButtonState buttons = mWiimote.getButtonState();
+            //Only respond on a change from 0 to 1
+            if ((buttons & BUTTON_UP) && !(buttonMem & BUTTON_UP)) {
+                moveLeft(); //Sideways controller, up is left
+            }
+            if ((buttons & BUTTON_DOWN) && !(buttonMem & BUTTON_DOWN)) {
+                moveRight(); //Sideways controller, down is right
+            }
+            if ((buttons & BUTTON_TWO) && !(buttonMem & BUTTON_TWO)) {
+                rotate(ROTATE_CLOCKWISE); //Sideways controller, two to rotate
+            }
+            if ((buttons & BUTTON_ONE) && !(buttonMem & BUTTON_ONE)) {
+                rotate(ROTATE_CLOCKWISE); //Sideways controller, two to rotate
+            }
+            if ((buttons & BUTTON_LEFT) && !(buttonMem & BUTTON_LEFT)) {
+                speedDrop();
+            }
+            if ((buttons & BUTTON_PLUS) && !(buttonMem & BUTTON_PLUS)) {
+                resetGame();
+            }
+            buttonMem = buttons;
         }
-        if (!moveDown()) {
-            saveShape();
-            downDelay = 100;
+
+        if (dropCounter > totalDropCount) {
+            if (!moveDown()) {
+                saveShape();
+                downDelay = 10; //Reset delay time
+                totalDropCount = 100;
+            }
+            dropCounter = 0;
         }
+        delay(downDelay);
+        dropCounter++;
 
     }
 }
 
 void Tetris::speedDrop() {
-    downDelay = 2;
+    downDelay = 1;
+    totalDropCount = 50;
 }
 
 void Tetris::gameOver() {
@@ -286,9 +321,20 @@ void Tetris::gameOver() {
     while (1) { delay(1000); }
 }
 
-uint16_t Tetris::getScore(){
+uint16_t Tetris::getScore() {
     return lineCount;
 }
-bool Tetris::isGameOver(){
+bool Tetris::isGameOver() {
     return mGameOver;
+}
+
+void Tetris::resetGame() {
+    lineCount = 0;
+    totalDropCount = 100;
+    downDelay = 10;
+    currentShape = random(7);
+    currentRotation = 0;
+    mGameBoard.xPos = (mGameBoard.width() / 2) - 2; mGameBoard.yPos = mGameBoard.height() - 1;
+    FastLED.clear();
+    FastLED.show();
 }
