@@ -285,7 +285,7 @@ void Tetris::run() {
                 rotate(ROTATE_CLOCKWISE); //Sideways controller, two to rotate
             }
             if ((buttons & BUTTON_ONE) && !(buttonMem & BUTTON_ONE)) {
-                rotate(ROTATE_CLOCKWISE); //Sideways controller, two to rotate
+                rotate(ROTATE_ANTICLOCKWISE); //Sideways controller, two to rotate
             }
             if ((buttons & BUTTON_LEFT) && !(buttonMem & BUTTON_LEFT)) {
                 speedDrop();
@@ -300,7 +300,7 @@ void Tetris::run() {
             if (!moveDown()) {
                 saveShape();
                 downDelay = 10; //Reset delay time
-                totalDropCount = 100;
+                totalDropCount = 80;
             }
             dropCounter = 0;
         }
@@ -312,13 +312,35 @@ void Tetris::run() {
 
 void Tetris::speedDrop() {
     downDelay = 1;
-    totalDropCount = 50;
+    totalDropCount = 30;
 }
 
 void Tetris::gameOver() {
     DEBUG_PRINT("GAME OVER");
     mGameOver = true;
-    while (1) { delay(1000); }
+    ButtonState buttonMem;
+
+    //Quick & Dirty way to show score maybe?
+    FastLED.clear();
+    for(uint8_t i = 0; i< getScore(); i++){
+        mGameBoard.mMatrix[i] = GREEN;
+    }
+    FastLED.show();
+
+    while (mGameOver) {
+        mWiimote.task(); // Keep the remote running
+        //Respond to button inputs:
+        if (mWiimote.available() > 0) {
+            ButtonState buttons = mWiimote.getButtonState();
+            //Only respond on a change from 0 to 1
+            if ((buttons & BUTTON_PLUS) && !(buttonMem & BUTTON_PLUS)) {
+                resetGame(); //Sideways controller, up is left
+                break;
+            }
+            buttonMem = buttons;
+        }
+        delay(10);
+    }
 }
 
 uint16_t Tetris::getScore() {
@@ -330,10 +352,11 @@ bool Tetris::isGameOver() {
 
 void Tetris::resetGame() {
     lineCount = 0;
-    totalDropCount = 100;
+    totalDropCount = 80;
     downDelay = 10;
     currentShape = random(7);
     currentRotation = 0;
+    mGameOver = false;
     mGameBoard.xPos = (mGameBoard.width() / 2) - 2; mGameBoard.yPos = mGameBoard.height() - 1;
     FastLED.clear();
     FastLED.show();
