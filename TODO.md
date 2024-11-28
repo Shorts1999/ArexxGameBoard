@@ -16,7 +16,7 @@
 * score display
 * add a DNS to replace the IP address
 * Make seperate class for controller
-  * Built around freeRTOS queue
+  * Built around freeRTOS tasks & queue for async operation
   * Tetris.cpp can read controller independent of controller usage mode
   * Bluetooth controller
   * Web-based controller
